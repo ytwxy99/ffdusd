@@ -1,0 +1,8 @@
+PRICE:
+  buy: "1.0001"
+  sell: 0.9998
+
+AUTH:
+  ak: "ak"
+  sk: "sk"
+
