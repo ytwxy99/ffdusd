@@ -14,15 +14,3 @@ def InitConf(path=DEFAULT_CONFIG):
     except FileNotFoundError as e:
         print(f"配置文件不存在:%s" % path)
         raise e
-
-## 获取配置项
-#username = config['DEFAULT']['username']
-#password = config['DEFAULT']['password']
-#db_name = config['DATABASE']['db_name']
-#log_level = config['LOGGING']['level']
-#
-## 打印配置项
-#print(f"Username: {username}")
-#print(f"Password: {password}")
-#print(f"Database Name: {db_name}")
-#print(f"Log Level: {log_level}")
