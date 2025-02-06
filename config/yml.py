@@ -11,6 +11,8 @@ def InitConf(path=DEFAULT_CONFIG):
         with open(path, 'r') as f:
             global CONF
             CONF = yaml.safe_load(f)
+
+        return CONF
     except FileNotFoundError as e:
         print(f"配置文件不存在:%s" % path)
         raise e
