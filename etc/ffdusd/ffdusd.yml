@@ -6,3 +6,5 @@ AUTH:
   ak: "ak"
   sk: "sk"
 
+TRADE:
+  min_amount: 1 #fdusd/usdt交易最小数量单位
