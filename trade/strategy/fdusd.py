@@ -12,6 +12,7 @@ T = {
 def do(exchange, symbol):
     while True:
         c_price = float(binance.fetch_current_price(exchange, symbol))
+        print(c_price)
         time.sleep(1)
 
 

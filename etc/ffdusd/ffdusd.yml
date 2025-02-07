@@ -8,3 +8,6 @@ AUTH:
 
 TRADE:
   min_amount: 1 #fdusd/usdt交易最小数量单位
+
+DB:
+  db_path: "sqlite:///example.db"

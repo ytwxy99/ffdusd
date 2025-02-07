@@ -8,6 +8,7 @@ setup(
         "ccxt",
         "pyyaml",
         "colorama",
+        "sqlalchemy",
     ],
     entry_points={
         "console_scripts": [
