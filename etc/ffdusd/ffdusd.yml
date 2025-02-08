@@ -3,11 +3,11 @@ PRICE:
   sell: 0.9998
 
 AUTH:
-  ak: "ak"
-  sk: "sk"
+  ak: ""
+  sk: ""
 
 TRADE:
   min_amount: 1 #fdusd/usdt交易最小数量单位
 
 DB:
-  db_path: "sqlite:///example.db"
+  db_path: "sqlite:///ffdusd.db"
