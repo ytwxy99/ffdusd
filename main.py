@@ -1,15 +1,18 @@
 from config import yml
 from utils import pt
 from trade.strategy import fdusd as fdd
-from db import base as db
+from trade import base
+from models import base as db
+from models import markets
 
 def main():
     try:
         pt.Pinit()
         yml.InitConf("/Users/bytedance/Documents/project/ffdusd/etc/ffdusd/ffdusd.yml")
         base.init_trade(yml.CONF, True)
-        fdd.do(base.exchange, base.SYMBOL)
         db.InitDB(yml.CONF)
+        print(markets.get_all_markets(db.session))
+        #fdd.do(base.exchange, base.SYMBOL)
     except Exception as e:
         print(e)
         exit(1)

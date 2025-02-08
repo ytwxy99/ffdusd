@@ -7,7 +7,7 @@ def create_market(session, market):
 
 
 def fetch_market(session, order_id):
-    return session.query(base.Market).filter_by(order_id=order_id).first()
+    return session.query(base.Market).filter_by(order_id=order_id).filter(base.Market.deleted_at.is_(None)).first()
 
 
 def update_market_status(session, order_id, status):
@@ -21,3 +21,7 @@ def delete_market(session, order_id):
     if to_delete:
         to_delete.deleted_at = datetime.utcnow()
         session.commit()
+
+
+def get_all_markets(session):
+    return session.query(base.Market).filter(base.Market.deleted_at.is_(None)).all()

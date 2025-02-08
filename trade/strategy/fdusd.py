@@ -16,7 +16,7 @@ def do(exchange, symbol):
         time.sleep(1)
 
 
-def decision_make(c_price):
+def decision_make(exchange, c_price, symbol):
     global T
     orders = binance.fetch_open_orders(exchange, symbol)
 
@@ -54,7 +54,7 @@ def decision_make(c_price):
                 return True
 
             for order in orders:
-                od = order[info]
+                od = order["info"]
                 if not T["loop"] and od["side"] == "BUY":
                     # 如果有买单且第一次触发这个条件时候，需要撤销重新用"low" 价格买入
                     if not binance.cancel_order(exchange, symbol, od["orderId"]):
