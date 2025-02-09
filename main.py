@@ -1,4 +1,4 @@
-from config import yml
+from config.yml import CONF
 from utils import pt
 from trade.strategy import fdusd as fdd
 from trade import base
@@ -8,9 +8,8 @@ from models import markets
 def main():
     try:
         pt.Pinit()
-        yml.InitConf("/Users/bytedance/Documents/project/ffdusd/etc/ffdusd/ffdusd.yml")
-        base.init_trade(yml.CONF, True)
-        db.InitDB(yml.CONF)
+        base.init_trade(CONF, True)
+        db.migrate()
         print(markets.get_all_markets(db.session))
         #fdd.do(base.exchange, base.SYMBOL)
     except Exception as e:
