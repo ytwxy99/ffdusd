@@ -10,7 +10,6 @@ def main():
         pt.Pinit()
         base.init_trade(CONF, True)
         db.migrate()
-        print(markets.get_all_markets(db.session))
         #fdd.do(base.exchange, base.SYMBOL)
     except Exception as e:
         print(e)

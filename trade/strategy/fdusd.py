@@ -1,5 +1,7 @@
 import time
 from sdk import binance
+from models import markets
+from models.base import session, Market
 
 T = {
     "up": 0.0,
@@ -10,15 +12,18 @@ T = {
 }
 
 def do(exchange, symbol):
+    # 所有开始前都需要把挂单都撤销
+    cancel_all_orders(exchange, symbol)
     while True:
         c_price = float(binance.fetch_current_price(exchange, symbol))
-        print(c_price)
+        decision_make(exchange, c_price, symbol)
         time.sleep(1)
 
 
 def decision_make(exchange, c_price, symbol):
     global T
-    orders = binance.fetch_open_orders(exchange, symbol)
+    #orders = binance.fetch_open_orders(exchange, symbol)
+    open_orders = markets.get_all_open_orders(session)
 
     if T["up"] == 0.0 and T["low"] == 0.0:
         T["up"] = c_price
@@ -36,36 +41,49 @@ def decision_make(exchange, c_price, symbol):
 
     if c_price == T["up"] and c_price != T["low"]:
         T["up_times"] = T["up_times"] + 1
-        print(f"Current price map of {symbol}: {T}")
 
     if c_price == T["low"] and c_price != T["up"]:
         T["low_times"] = T["low_times"] + 1
-        print(f"Current price map of {symbol}: {T}")
 
 
+    print(T)
     if T["up_times"] >= 3 and T["low_times"] >= 3:
         # 如果已买入，则需要用"up" 加个挂单卖出
         # return True  
-        if len(orders) == 0:
+        if len(open_orders) == 0:
             # 如果没有挂单，需要用"low" 价格挂单买入
-            binance.create_buy_limit_order(exchange, symbol, 6, T["up"])
-        else:
-            if T["loop"]:
-                return True
+            buy_order = binance.create_buy_limit_order(exchange, symbol, 6, T["low"])
+            if buy_order:
+                od = buy_order["info"]
+                import pdb;pdb.set_trace()
+                new_order = Market(order_id=od["orderId"], side=od["side"], status=od["status"], sell_price=T["up"], price=T["low"])
+                markets.create_order(session, new_order)
+        #else:
+        #    if T["loop"]:
+        #        return True
 
-            for order in orders:
-                od = order["info"]
-                if not T["loop"] and od["side"] == "BUY":
-                    # 如果有买单且第一次触发这个条件时候，需要撤销重新用"low" 价格买入
-                    if not binance.cancel_order(exchange, symbol, od["orderId"]):
-                        T["loop"] = True
-                    
-                    binance.create_buy_limit_order(exchange, symbol, 6, T["low"])
+        #    for order in open_orders:
+        #        od = order["info"]
+        #        if not T["loop"] and od["side"] == "BUY":
+        #            # 如果有买单且第一次触发这个条件时候，需要撤销重新用"low" 价格买入
+        #            if not binance.cancel_order(exchange, symbol, od["orderId"]):
+        #                T["loop"] = True
+        #            
+        #            binance.create_buy_limit_order(exchange, symbol, 6, T["low"])
 
-                elif not T["loop"] and od["side"] == "SELL":
-                    # 如果有卖单且第一次触发这个条件时候，需要撤销重新用"up" 价格卖出
-                    if not binance.cancel_order(exchange, symbol, od["orderId"]):
-                        T["loop"] = True
-                    
-                    binance.create_buy_limit_order(exchange, symbol, 6, T["up"])
+        #        elif not T["loop"] and od["side"] == "SELL":
+        #            # 如果有卖单且第一次触发这个条件时候，需要撤销重新用"up" 价格卖出
+        #            if not binance.cancel_order(exchange, symbol, od["orderId"]):
+        #                T["loop"] = True
+        #            
+        #            binance.create_buy_limit_order(exchange, symbol, 6, T["up"])
 
+
+# 撤销所有挂单
+def cancel_all_orders(exchange, symbol):
+    try:
+        orders = binance.fetch_open_orders(exchange, symbol)
+        for order in orders:
+            binance.cancel_order(exchange, symbol, order["info"]["orderId"])
+    except Exception as e:
+        print(f"cancel_all_orders {symbol} failed: {e}")

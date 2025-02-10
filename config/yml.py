@@ -10,5 +10,5 @@ try:
     with open(DEFAULT_CONFIG, 'r') as f:
         CONF = yaml.safe_load(f)
 except FileNotFoundError as e:
-    print(f"配置文件不存在:%s" % path)
+    print(f"配置文件不存在:%s" % DEFAULT_CONFIG)
     raise e

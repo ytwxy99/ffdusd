@@ -68,7 +68,7 @@ def create_sell_limit_order(exchange, symbol, amount, price):
         return None
 
 
-def check_order_status(order_id, symbol):
+def check_order_status(exchange, order_id, symbol):
     try:
         order = exchange.fetch_order(order_id, symbol)
         print(f"Order {order_id} is closed with status: {order['status']}")
