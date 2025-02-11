@@ -1,5 +1,8 @@
 import ccxt
 
+from models.base import Market, session
+from models import markets
+
 # 初始化币安交易所实例
 def auth_exchagne_binance(ak, sk, is_enable_rate_limit):
     return ccxt.binance({
@@ -45,15 +48,19 @@ def cancel_order(exchange, symbol, order_id):
 
 
 # 现货买入
-def create_buy_limit_order(exchange, symbol, amount, price):
+def create_buy_limit_order(exchange, symbol, amount, price, sell_price):
     try:
         order = exchange.create_limit_buy_order(symbol, amount, price)
-        order_id = order['id']  # 保存订单ID
-        print(f"Buy order created: {order}")
-        return order
+        if order:
+            od = order["info"]
+            new_order = Market(order_id=od["orderId"], side=od["side"], status=od["status"], sell_price=sell_price, price=price)
+            markets.create_order(session, new_order)
+            print(f"Buy order created: {order}")
+            return order, True
+
     except ccxt.BaseError as e:
         print(f"Error creating buy order: {e}")
-        return None
+        return None, False
 
 
 # 现货卖出
