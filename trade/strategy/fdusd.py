@@ -50,7 +50,7 @@ def decision_make(exchange, c_price, symbol):
         # return True  
         if len(open_orders) == 0 and not T["loop"]:
             # 如果没有挂单，需要用"low" 价格挂单买入
-            buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 6, T["low"], T["up"])
+            buy_order, ret = binance.cate_buy_limit_order(exchange, symbol, 6, T["low"], T["up"])
             if ret:
                 T["loop"] = True
                 #TODO(tracy), 这里需要个线程来跟踪订单交易情况，并最终更新order订单记录

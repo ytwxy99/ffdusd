@@ -56,7 +56,7 @@ def create_buy_limit_order(exchange, symbol, amount, price, sell_price):
             new_order = Market(order_id=od["orderId"], side=od["side"], status=od["status"], sell_price=sell_price, price=price)
             markets.create_order(session, new_order)
             print(f"Buy order created: {order}")
-            return order, True
+            return order["info"], True
 
     except ccxt.BaseError as e:
         print(f"Error creating buy order: {e}")
