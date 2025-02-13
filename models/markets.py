@@ -29,8 +29,8 @@ def delete_order(session, order_id):
 
 # 获取所有已成交的订单
 def get_all_orders(session):
-    return session.query(Market).filter(Market.deleted_at.is_(None)).all()
+    return session.query(Market).filter(and_(Market.deleted_at.is_(None), Market.status == "closed")).all()
 
 
 def get_all_open_orders(session):
-    return session.query(Market).filter(and_(Market.deleted_at.is_(None), or_(Market.status != "close", Market.status != "canceled"))).all()
+    return session.query(Market).filter(and_(Market.deleted_at.is_(None), or_(Market.status != "closed", Market.status != "canceled"))).all()

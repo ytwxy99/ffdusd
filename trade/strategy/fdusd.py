@@ -2,6 +2,7 @@ import time
 from sdk import binance
 from models import markets
 from models.base import session, Market
+from utils import thread
 
 T = {
     "up": 0.0,
@@ -22,7 +23,6 @@ def do(exchange, symbol):
 
 def decision_make(exchange, c_price, symbol):
     global T
-    #orders = binance.fetch_open_orders(exchange, symbol)
     open_orders = markets.get_all_open_orders(session)
 
     if T["up"] == 0.0 and T["low"] == 0.0:
@@ -47,13 +47,23 @@ def decision_make(exchange, c_price, symbol):
 
     if T["up_times"] >= 3 and T["low_times"] >= 3:
         # 如果已买入，则需要用"up" 加个挂单卖出
+        closed_orders = markets.get_all_orders(session)
+        for order in closed_orders:
+            if order.side == "BUY":
+                pass
+                # TODO(tracy), do sell
+                #buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 6, T["low"], T["up"])
+                #if ret:
+                #    T["loop"] = True
+                #    thread.do_thread(check_order, (exchange, order_id, symbol, 6))
+
         # return True  
         if len(open_orders) == 0 and not T["loop"]:
             # 如果没有挂单，需要用"low" 价格挂单买入
-            buy_order, ret = binance.cate_buy_limit_order(exchange, symbol, 6, T["low"], T["up"])
+            buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 6, T["low"], T["up"])
             if ret:
                 T["loop"] = True
-                #TODO(tracy), 这里需要个线程来跟踪订单交易情况，并最终更新order订单记录
+                thread.do_thread(check_order, (exchange, order_id, symbol, 6))
 
         else:
             # 此逻辑处理已有挂单情况下，具体处理情况如下：
@@ -91,3 +101,27 @@ def cancel_all_orders(exchange, symbol):
             binance.cancel_order(exchange, symbol, order["info"]["orderId"])
     except Exception as e:
         print(f"cancel_all_orders {symbol} failed: {e}")
+
+
+def check_order(order_args):
+    exchange, order_id, symbol, amount = order_args
+
+    while True:
+        try:
+            order = binance.check_order_status(exchange, order_id, symbol)
+            if not order:
+                print(f"fetch_order failed: {order_id}")
+
+            if order["status"]  == "closed" and order["filled"] == amount:
+                markets.update_market_order(session, order_id, order["status"])
+                print(f"Order completed successfully: {order}")
+                break
+            elif order["status"] == "canceled" or order["status"] == "expired":
+                print("Order did not complete: {order}")
+                markets.update_market_order(session, order_id, order["failed"])
+                break
+
+            time.sleep(2) # 存在限速问题，我们先将间隔定位2s
+
+        except Exception as e:
+            raise e

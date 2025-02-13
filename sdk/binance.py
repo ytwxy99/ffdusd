@@ -67,18 +67,21 @@ def create_buy_limit_order(exchange, symbol, amount, price, sell_price):
 def create_sell_limit_order(exchange, symbol, amount, price):
     try:
         order = exchange.create_limit_sell_order(symbol, amount, price)
-        order_id = order['id']  # 保存订单ID
-        print(f"Sell order created: {order}")
-        return order
+        if order:
+            od = order['info'] 
+            new_order = Market(order_id=od["orderId"], side=od["side"], status=od["status"], sell_price=sell_price, price=price)
+            markets.create_order(session, new_order)
+            print(f"Sell order created: {order}")
+            return order["info"], True
+
     except ccxt.BaseError as e:
         print(f"Error creating sell order: {e}")
-        return None
+        return None, False
 
 
 def check_order_status(exchange, order_id, symbol):
     try:
         order = exchange.fetch_order(order_id, symbol)
-        print(f"Order {order_id} is closed with status: {order['status']}")
         return order
     except ccxt.BaseError as e:
         print(f"Error fetching order status: {e}")
