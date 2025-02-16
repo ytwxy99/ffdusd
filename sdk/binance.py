@@ -64,12 +64,12 @@ def create_buy_limit_order(exchange, symbol, amount, price, sell_price):
 
 
 # 现货卖出
-def create_sell_limit_order(exchange, symbol, amount, price):
+def create_sell_limit_order(exchange, symbol, amount, price, peer_order_id):
     try:
         order = exchange.create_limit_sell_order(symbol, amount, price)
         if order:
             od = order['info'] 
-            new_order = Market(order_id=od["orderId"], side=od["side"], status=od["status"], sell_price=sell_price, price=price)
+            new_order = Market(order_id=od["orderId"], side=od["side"], status=od["status"], sell_price=sell_price, price=price, peer_order_id=peer_order_id)
             markets.create_order(session, new_order)
             print(f"Sell order created: {order}")
             return order["info"], True

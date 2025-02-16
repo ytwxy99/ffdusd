@@ -47,23 +47,26 @@ def decision_make(exchange, c_price, symbol):
 
     if T["up_times"] >= 3 and T["low_times"] >= 3:
         # 如果已买入，则需要用"up" 加个挂单卖出
-        closed_orders = markets.get_all_orders(session)
+        closed_orders = markets.get_all_closed_orders(session)
         for order in closed_orders:
             if order.side == "BUY":
-                pass
-                # TODO(tracy), do sell
-                #buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 6, T["low"], T["up"])
-                #if ret:
-                #    T["loop"] = True
-                #    thread.do_thread(check_order, (exchange, order_id, symbol, 6))
+                # 这里认为均值会回归，故低于buy单记录的卖出价也等待均值回归后卖出
+                if T["low"] >= order.sell_price:
+                    do_sell_price = T["low"]
+                else:
+                    do_sell_price = order.sell_price
 
-        # return True  
+                sell_order, ret = binance.create_sell_limit_order(exchange, symbol, 6, price, order.order_id)
+                if ret:
+                    T["loop"] = True
+                    thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 6, True))
+
         if len(open_orders) == 0 and not T["loop"]:
             # 如果没有挂单，需要用"low" 价格挂单买入
             buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 6, T["low"], T["up"])
             if ret:
                 T["loop"] = True
-                thread.do_thread(check_order, (exchange, order_id, symbol, 6))
+                thread.do_thread(check_order, (exchange, buy_order["orderId"], symbol, 6, False))
 
         else:
             # 此逻辑处理已有挂单情况下，具体处理情况如下：
@@ -104,7 +107,7 @@ def cancel_all_orders(exchange, symbol):
 
 
 def check_order(order_args):
-    exchange, order_id, symbol, amount = order_args
+    exchange, order_id, symbol, amount, close_peer = order_args
 
     while True:
         try:
@@ -114,12 +117,19 @@ def check_order(order_args):
 
             if order["status"]  == "closed" and order["filled"] == amount:
                 markets.update_market_order(session, order_id, order["status"])
+                # NOTE(tracy), delete peer order record when sell order has been finished.
+                sell_order = markets.fetch_order(session, order_id)
+                markets.delete_order(session, order_id)
+                markets.delete_order(session, sell_order.peer_order_id)
                 print(f"Order completed successfully: {order}")
                 break
+
             elif order["status"] == "canceled" or order["status"] == "expired":
                 print("Order did not complete: {order}")
                 markets.update_market_order(session, order_id, order["failed"])
                 break
+
+            print(f"Check order status: {order}")
 
             time.sleep(2) # 存在限速问题，我们先将间隔定位2s
 
