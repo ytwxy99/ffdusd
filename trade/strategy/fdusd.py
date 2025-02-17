@@ -140,7 +140,7 @@ def check_order(order_args):
                 markets.update_market_order(session, order_id, order["failed"])
                 break
 
-            print(f"Check order status, order id: {order}")
+            print(f"Check order status, symbol: {symbol}, order id: {order_id}, status: {order['status']}, price: {order['price']}")
 
             time.sleep(2) # 存在限速问题，我们先将间隔定位2s
 
