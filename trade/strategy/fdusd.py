@@ -16,9 +16,10 @@ def do(exchange, symbol):
     # 所有开始前都需要把挂单都撤销
     cancel_all_orders(exchange, symbol)
     while True:
-        c_price = float(binance.fetch_current_price(exchange, symbol))
-        decision_make(exchange, c_price, symbol)
-        time.sleep(1)
+        c_price = binance.fetch_current_price(exchange, symbol)
+        if not c_price:
+            decision_make(exchange, float(c_price), symbol)
+            time.sleep(1)
 
 
 def decision_make(exchange, c_price, symbol):
@@ -124,6 +125,7 @@ def check_order(order_args):
             order = binance.check_order_status(exchange, order_id, symbol)
             if not order:
                 print(f"fetch_order failed: {order_id}")
+                continue
 
             if order["status"]  == "closed" and order["filled"] == amount:
                 markets.update_market_order(session, order_id, order["status"])
