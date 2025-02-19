@@ -17,7 +17,7 @@ def do(exchange, symbol):
     cancel_all_orders(exchange, symbol)
     while True:
         c_price = binance.fetch_current_price(exchange, symbol)
-        if not c_price:
+        if c_price:
             decision_make(exchange, float(c_price), symbol)
             time.sleep(1)
 
