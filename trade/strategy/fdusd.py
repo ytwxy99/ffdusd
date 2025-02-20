@@ -55,6 +55,7 @@ def decision_make(exchange, c_price, symbol):
             closed_orders = markets.get_all_closed_orders(session)
             for order in closed_orders:
                 # NOTE(tracy), 当前如果有订单需要卖出就不在进行买入，但这样不利于充分交易；当前保持现状，后续按需优化
+                print(f"当前存在需要交易订单: {order.order_id}")
                 if len(open_orders) != 0 :
                     # 有挂单就不进行卖出操作
                     return

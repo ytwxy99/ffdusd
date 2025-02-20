@@ -33,7 +33,7 @@ def get_all_closed_orders(session):
 
 
 def get_all_open_orders(session):
-    return session.query(Market).filter(and_(Market.deleted_at.is_(None), or_(Market.status != "closed", Market.status != "canceled"))).all()
+    return session.query(Market).filter(and_(Market.deleted_at.is_(None), and_(Market.status != "closed", Market.status != "canceled"))).all()
 
 # 获取peer的订单
 def fetch_peer_order(session, order_id):
