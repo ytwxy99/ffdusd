@@ -103,11 +103,12 @@ def get_first_order_book(exchange, symbol):
         asks = order_book['asks']
 
         # 打印盘口基础信息
-        print(f"\n盘口时间: {order_book['timestamp']}")
-        book["hight_price"] = float(bids[0][0])
-        book["hight_count"] = bids[0][1]
-        book["low_price"] = asks[0][0]
-        book["low_count"] = asks[0][1]
+        book["buy_price"] = float(bids[0][0])
+        book["buy_count"] = bids[0][1]
+        book["sell_price"] = asks[0][0]
+        book["sell_count"] = asks[0][1]
+
+        return book
 
     except ccxt.NetworkError as e:
         print(f"网络错误: {e}")

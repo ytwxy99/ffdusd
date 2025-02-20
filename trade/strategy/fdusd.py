@@ -187,7 +187,9 @@ def check_order(order_args):
 
 def book_decision(exchange, symbol):
     books = binance.get_first_order_book(exchange, symbol)
-    if (books["sell_price"] - books["buy_price"]) == 0.0001:
+    if (books["sell_price"] - 0.0001) == books["buy_price"]:
         if books["sell_count"] > 100000 and books["buy_count"] > 100000:
             return True
+    else:
+        return False
 
