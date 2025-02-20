@@ -18,21 +18,21 @@ try:
     bids = order_book['bids']
     asks = order_book['asks']
 
-    # 打印前5档买盘和卖盘
-    print("当前买盘（Bids）:")
-    for bid in bids[:100]:
-        price, amount = bid[:2]
-        print(f"价格: {price:.6f} 数量: {amount:.2f}")
+    ## 打印前5档买盘和卖盘
+    #print("当前买盘（Bids）:")
+    #for bid in bids[:100]:
+    #    price, amount = bid[:2]
+    #    print(f"价格: {price:.6f} 数量: {amount:.2f}")
 
-    print("\n当前卖盘（Asks）:")
-    for ask in asks[:100]:
-        price, amount = ask[:2]
-        print(f"价格: {price:.6f} 数量: {amount:.2f}")
+    #print("\n当前卖盘（Asks）:")
+    #for ask in asks[:100]:
+    #    price, amount = ask[:2]
+    #    print(f"价格: {price:.6f} 数量: {amount:.2f}")
 
     # 打印盘口基础信息
     print(f"\n盘口时间: {order_book['timestamp']}")
-    print(f"买盘最高价: {bids[0][0]:.6f} (数量: {bids[0][1]:.2f})")
-    print(f"卖盘最低价: {asks[0][0]:.6f} (数量: {asks[0][1]:.2f})")
+    print(f"买盘最高价: {bids[0][0]} (数量: {bids[0][1]:.2f})")
+    print(f"卖盘最低价: {asks[0][0]} (数量: {asks[0][1]:.2f})")
 
 except ccxt.NetworkError as e:
     print(f"网络错误: {e}")

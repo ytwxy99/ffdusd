@@ -86,3 +86,41 @@ def check_order_status(exchange, order_id, symbol):
     except ccxt.BaseError as e:
         print(f"Error fetching order status: {e}")
         return None
+
+
+def get_first_order_book(exchange, symbol):
+    book = {
+        "sell_price": 0.0,
+        "buy_price": 0.0,
+        "sell_count": 0.0,
+        "buy_count": 0.0,
+    }
+
+    try:
+        order_book = exchange.fetch_order_book(symbol)
+        # 提取买盘（bids）和卖盘（asks）
+        bids = order_book['bids']
+        asks = order_book['asks']
+
+        # 打印盘口基础信息
+        print(f"\n盘口时间: {order_book['timestamp']}")
+        book["hight_price"] = float(bids[0][0])
+        book["hight_count"] = bids[0][1]
+        book["low_price"] = asks[0][0]
+        book["low_count"] = asks[0][1]
+
+    except ccxt.NetworkError as e:
+        print(f"网络错误: {e}")
+        book = None
+        return book
+
+    except ccxt.ExchangeError as e:
+        print(f"交易所错误: {e}")
+        book = None
+        return book
+
+    except Exception as e:
+        print(f"未知错误: {e}")
+        book = None
+        return book
+

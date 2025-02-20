@@ -3,7 +3,6 @@ from utils import pt
 from trade.strategy import fdusd as fdd
 from trade import base
 from models import base as db
-from models import markets
 
 def main():
     try:
