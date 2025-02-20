@@ -23,7 +23,6 @@ def do(exchange, symbol):
             decision_make(exchange, float(c_price), symbol)
             time.sleep(1)
 
-
 def decision_make(exchange, c_price, symbol):
     try:
         global T
@@ -125,7 +124,7 @@ def decision_make(exchange, c_price, symbol):
                             buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 6, T["low"], T["up"])
                             if ret:
                                 T["loop"] = True
-                                thread.do_thread(check_order, (exchange, buy_order["orderId"], symbol, 6, False))
+                                Thread = thread.do_thread(check_order, (exchange, buy_order["orderId"], symbol, 6, False))
 
                     elif open_order["side"] == "SELL":
                         # 如果有卖单且第一次触发这个条件时候，需要撤销重新用"up" 价格卖出
@@ -138,7 +137,7 @@ def decision_make(exchange, c_price, symbol):
                             sell_order, ret = binance.create_sell_limit_order(exchange, symbol, 6, T["low"], open_order.order_id)
                             if ret:
                                 T["loop"] = True
-                                thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 6, True))
+                                Thread = thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 6, True))
 
     except Exception as e :
         traceback.print_exc()
@@ -154,7 +153,7 @@ def cancel_all_orders(exchange, symbol):
         print(f"cancel_all_orders {symbol} failed: {e}")
 
 
-def check_order(order_args):
+def check_order(*order_args):
     exchange, order_id, symbol, amount, close_peer = order_args
 
     while True:

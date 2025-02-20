@@ -1,5 +1,5 @@
-from concurrent.futures import ThreadPoolExecutor
+import threading
 
-def do_thread(func, args, workers = 1):
-    with ThreadPoolExecutor(max_workers=workers) as executor:
-        executor.submit(func, args)
+def do_thread(func, args):
+    thread = threading.Thread(target=func, args=args)
+    thread.start()
