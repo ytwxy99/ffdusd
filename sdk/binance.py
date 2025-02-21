@@ -42,6 +42,7 @@ def cancel_order(exchange, symbol, order_id):
     try:
         cancel_result = exchange.cancel_order(order_id, symbol)
         print(f"Cancel order result: {cancel_result}")
+        return cancel_result
     except ccxt.BaseError as e:
         print(f"Error canceling order: {e}")
         return None
