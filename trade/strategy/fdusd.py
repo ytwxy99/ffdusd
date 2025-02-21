@@ -91,7 +91,6 @@ def decision_make(exchange, c_price, symbol):
                 #    就按照撤单，用最新高价来卖出；
                 # 3. 当买入价格比最新low价格低时，是否需要撤单重新用最新价格买入这里需要靠谱排队问题，当前就按照撤单
                 #    用最新高价来买入;
-                print(f"价格波动，进行已有挂单检测: {open_orders}, loop: {T}")
 
                 if T["loop"]:
                     # 已下单买入，则不进行操作
@@ -101,9 +100,10 @@ def decision_make(exchange, c_price, symbol):
                     return
 
                 for open_order in open_orders:
-                    if open_order["side"] == "BUY":
+                    print(f"价格波动，进行已有挂单检测: {open_order.__dict__}, loop: {T}")
+                    if open_order.side == "BUY":
                         # 如果有买单且第一次触发这个条件时候，需要撤销重新用"low" 价格买入
-                        if T["low"] < open_order["price"]:
+                        if T["low"] < open_order.price:
                             if binance.cancel_order(exchange, symbol, open_order.order_id):
                                 markets.delete_order(session, open_order.order_id)
                             else:
@@ -114,8 +114,8 @@ def decision_make(exchange, c_price, symbol):
                                 T["loop"] = True
                                 thread.do_thread(check_order, (exchange, buy_order["orderId"], symbol, 6, False))
 
-                    elif open_order["side"] == "BUY":
-                        if T["low"] > open_order["price"]:
+                    if open_order.side == "BUY":
+                        if T["low"] > open_order.price:
                             if binance.cancel_order(exchange, symbol, open_order.order_id):
                                 markets.delete_order(session, open_order.order_id)
                             else:
@@ -124,11 +124,11 @@ def decision_make(exchange, c_price, symbol):
                             buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 6, T["low"], T["up"])
                             if ret:
                                 T["loop"] = True
-                                Thread = thread.do_thread(check_order, (exchange, buy_order["orderId"], symbol, 6, False))
+                                thread.do_thread(check_order, (exchange, buy_order["orderId"], symbol, 6, False))
 
-                    elif open_order["side"] == "SELL":
+                    if open_order.side == "SELL":
                         # 如果有卖单且第一次触发这个条件时候，需要撤销重新用"up" 价格卖出
-                        if T["low"] > open_order["sell_price"]:
+                        if T["low"] > open_order.sell_price:
                             if binance.cancel_order(exchange, symbol, open_order.order_id):
                                 markets.delete_order(session, open_order.order_id)
                             else:
@@ -137,7 +137,7 @@ def decision_make(exchange, c_price, symbol):
                             sell_order, ret = binance.create_sell_limit_order(exchange, symbol, 6, T["low"], open_order.order_id)
                             if ret:
                                 T["loop"] = True
-                                Thread = thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 6, True))
+                                thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 6, True))
 
     except Exception as e :
         traceback.print_exc()
