@@ -32,11 +32,15 @@ def decision_make(exchange, c_price, symbol):
             T["low"] = c_price
         
         if c_price > T["up"]:
+            T["low"] = T["up"]
             T["up"] = c_price
             T["up_times"] = 0
+            T["low_times"] = 0
 
         if c_price < T["low"]:
+            T["up"] = T["low"]
             T["low"] = c_price
+            T["up_times"] = 0
             T["low_times"] = 0
 
         if c_price == T["up"] and c_price != T["low"]:
@@ -115,7 +119,7 @@ def decision_make(exchange, c_price, symbol):
 
                     if open_order.side == "SELL":
                         # 如果有卖单且第一次触发这个条件时候，需要撤销重新用"up" 价格卖出
-                        if T["up"] < open_order.sell_price:
+                        if T["up"] != open_order.sell_price:
                             print(f"价格波动，进行已有挂单检测: {open_order.__dict__}, T: {T}")
                             if binance.cancel_order(exchange, symbol, open_order.order_id):
                                 markets.delete_order(session, open_order.order_id)
