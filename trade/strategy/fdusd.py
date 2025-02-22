@@ -50,7 +50,7 @@ def decision_make(exchange, c_price, symbol):
             T["low_times"] = T["low_times"] + 1
 
         if T["up_times"] >= 3 and T["low_times"] >= 3:
-            # 如果已买入，则需要用"up" 加个挂单卖出
+            # 如果已买入, 则需要用"up" 加个挂单卖出
             closed_orders = markets.get_all_closed_orders(session)
             for order in closed_orders:
                 # NOTE(tracy), 当前如果有订单需要卖出就不在进行买入，但这样不利于充分交易；当前保持现状，后续按需优化
@@ -92,6 +92,7 @@ def decision_make(exchange, c_price, symbol):
                     return
 
                 for open_order in open_orders:
+                    print(f"挂单检测，T：{T}, 预期成交价格: {open_order.price}")
                     if open_order.side == "BUY":
                         # 如果有买单且第一次触发这个条件时候，需要撤销重新用"low" 价格买入
                         if T["low"] < open_order.price:
@@ -178,8 +179,7 @@ def check_order(*order_args):
 
 def book_decision(exchange, symbol):
     books = binance.get_first_order_book(exchange, symbol)
-    if (books["sell_price"] - 0.0001) == books["buy_price"]:
-        if books["sell_count"] > 100000 and books["buy_count"] > 100000:
+    if books["sell_count"] > 100000 and books["buy_count"] > 100000:
             return True
     else:
         return False
