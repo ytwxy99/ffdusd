@@ -53,10 +53,13 @@ def create_buy_limit_order(exchange, symbol, amount, price, sell_price):
     try:
         order = exchange.create_limit_buy_order(symbol, amount, price)
         if order:
-            od = order["info"]
-            new_order = Market(order_id=od["orderId"], side=od["side"], status=od["status"], sell_price=sell_price, price=price)
+            order_id = order["info"]["orderid"]
+            side = order["info"]["side"]
+            status = order["info"]["status"]
+
+            new_order = Market(order_id=order_id, side=side, status=status, sell_price=sell_price, price=price)
             markets.create_order(session, new_order)
-            print(f"Buy order created: {order}")
+            print(f"Buy order created, order_id: {order_id}, price: {price}")
             return order["info"], True
 
     except ccxt.BaseError as e:
@@ -69,10 +72,13 @@ def create_sell_limit_order(exchange, symbol, amount, price, peer_order_id):
     try:
         order = exchange.create_limit_sell_order(symbol, amount, price)
         if order:
-            od = order['info'] 
-            new_order = Market(order_id=od["orderId"], side=od["side"], status=od["status"], sell_price=price, price=price, peer_order_id=peer_order_id)
+            order_id = order["info"]["orderid"]
+            side = order["info"]["side"]
+            status = order["info"]["status"]
+
+            new_order = Market(order_id=order_id, side=side, status=status, sell_price=price, price=price, peer_order_id=peer_order_id)
             markets.create_order(session, new_order)
-            print(f"Sell order created: {order}")
+            print(f"Sell order created, order_id: {order_id}, price: {price}")
             return order["info"], True
 
     except ccxt.BaseError as e:

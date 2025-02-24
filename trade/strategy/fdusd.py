@@ -29,6 +29,7 @@ def decision_make(exchange, c_price, symbol):
         open_orders = markets.get_all_open_orders(session)
 
         print(f"do decision, open_order: {open_orders}")
+        import pdb;pdb.set_trace()
 
         if T["up"] == 0.0 and T["low"] == 0.0:
             T["up"] = c_price
