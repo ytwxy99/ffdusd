@@ -53,7 +53,7 @@ def create_buy_limit_order(exchange, symbol, amount, price, sell_price):
     try:
         order = exchange.create_limit_buy_order(symbol, amount, price)
         if order:
-            order_id = order["info"]["orderid"]
+            order_id = order["info"]["orderId"]
             side = order["info"]["side"]
             status = order["info"]["status"]
 
@@ -72,7 +72,7 @@ def create_sell_limit_order(exchange, symbol, amount, price, peer_order_id):
     try:
         order = exchange.create_limit_sell_order(symbol, amount, price)
         if order:
-            order_id = order["info"]["orderid"]
+            order_id = order["info"]["orderId"]
             side = order["info"]["side"]
             status = order["info"]["status"]
 

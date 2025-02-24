@@ -29,7 +29,6 @@ def decision_make(exchange, c_price, symbol):
         open_orders = markets.get_all_open_orders(session)
 
         print(f"do decision, open_order: {open_orders}")
-        import pdb;pdb.set_trace()
 
         if T["up"] == 0.0 and T["low"] == 0.0:
             T["up"] = c_price
@@ -174,7 +173,7 @@ def check_order(*order_args):
 def book_decision(exchange, symbol):
     books = binance.get_first_order_book(exchange, symbol)
     if books["sell_count"] > 5000 and books["buy_count"] > 5000:
-        if books["buy_count"] > books["sell_count"]:
+        if books["buy_count"] > books["sell_count"]*1.2:
             return True
         else:
             return False
