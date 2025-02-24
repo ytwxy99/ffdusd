@@ -72,59 +72,59 @@ def decision_make(exchange, c_price, symbol):
                     if ret and not T["do_thread"]:
                         thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 6, True))
 
-        if book_decision(exchange, symbol):
+        decision =  book_decision(exchange, symbol)
 
-            if len(open_orders) == 0 and len(closed_orders) == 0:
-                buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 6, T["low"], T["up"])
-                if ret and not T["do_thread"]:
-                    thread.do_thread(check_order, (exchange, buy_order["orderId"], symbol, 6, False))
+        if len(open_orders) == 0 and len(closed_orders) == 0 and decision:
+            buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 6, T["low"], T["up"])
+            if ret and not T["do_thread"]:
+                thread.do_thread(check_order, (exchange, buy_order["orderId"], symbol, 6, False))
 
-            elif len(open_orders) != 0:
-                # 此逻辑处理已有挂单情况下，具体处理情况如下：
-                # 1. 当买入价格比最新low价格高时，则撤单用最新低价挂单买入。
-                # 2. 当order订单记录卖出价格比最新low低时候，是否需要撤单重新高价挂单卖出这里需要考虑排队问题，当前
-                #    就按照撤单，用最新高价来卖出；
-                # 3. 当买入价格比最新low价格低时，是否需要撤单重新用最新价格买入这里需要靠谱排队问题，当前就按照撤单
-                #    用最新高价来买入;
-                
-                for open_order in open_orders:
+        elif len(open_orders) != 0:
+            # 此逻辑处理已有挂单情况下，具体处理情况如下：
+            # 1. 当买入价格比最新low价格高时，则撤单用最新低价挂单买入。
+            # 2. 当order订单记录卖出价格比最新low低时候，是否需要撤单重新高价挂单卖出这里需要考虑排队问题，当前
+            #    就按照撤单，用最新高价来卖出；
+            # 3. 当买入价格比最新low价格低时，是否需要撤单重新用最新价格买入这里需要靠谱排队问题，当前就按照撤单
+            #    用最新高价来买入;
+            
+            for open_order in open_orders:
 
-                    if not T["do_thread"]:
-                        if open_order.side == "BUY":
-                            thread.do_thread(check_order, (exchange, open_order.order_id, symbol, 6, False))
-                        else:
-                            thread.do_thread(check_order, (exchange, open_order.order_id, symbol, 6, True))
-
-                    print(f"挂单检测，T：{T}, 预期成交价格: {open_order.price}")
+                if not T["do_thread"]:
                     if open_order.side == "BUY":
-                        # 如果有买单且第一次触发这个条件时候，需要撤销重新用"low" 价格买入
-                        if T["low"] != open_order.price:
-                            print(f"价格波动，进行已有挂单检测: {open_order.__dict__}, T: {T}")
-                            if binance.cancel_order(exchange, symbol, open_order.order_id):
-                                markets.delete_order(session, open_order.order_id)
-                            else:
-                                return
-                            
-                            buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 6, T["low"], T["up"])
-                            if ret and not T["do_thread"]:
-                                thread.do_thread(check_order, (exchange, buy_order["orderId"], symbol, 6, False))
+                        thread.do_thread(check_order, (exchange, open_order.order_id, symbol, 6, False))
+                    else:
+                        thread.do_thread(check_order, (exchange, open_order.order_id, symbol, 6, True))
 
-                    if open_order.side == "SELL":
-                        # 如果有卖单且第一次触发这个条件时候，需要撤销重新用"up" 价格卖出
-                        if T["up"] != open_order.sell_price:
-                            if T["up"] < open_order.sell_price:
-                                if book_decision(exchange, symbol):
-                                    return 
+                print(f"挂单检测，T：{T}, 预期成交价格: {open_order.price}")
+                if open_order.side == "BUY":
+                    # 如果有买单且第一次触发这个条件时候，需要撤销重新用"low" 价格买入
+                    if T["low"] != open_order.price:
+                        print(f"价格波动，进行已有挂单检测: {open_order.__dict__}, T: {T}")
+                        if binance.cancel_order(exchange, symbol, open_order.order_id):
+                            markets.delete_order(session, open_order.order_id)
+                        else:
+                            return
+                        
+                        buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 6, T["low"], T["up"])
+                        if ret and not T["do_thread"]:
+                            thread.do_thread(check_order, (exchange, buy_order["orderId"], symbol, 6, False))
 
-                            print(f"价格波动，进行已有挂单检测: {open_order.__dict__}, T: {T}")
-                            if binance.cancel_order(exchange, symbol, open_order.order_id):
-                                markets.delete_order(session, open_order.order_id)
-                            else:
-                                return
-                            
-                            sell_order, ret = binance.create_sell_limit_order(exchange, symbol, 6, T["up"], open_order.peer_order_id)
-                            if ret and not T["do_thread"]:
-                                thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 6, True))
+                if open_order.side == "SELL":
+                    # 如果有卖单且第一次触发这个条件时候，需要撤销重新用"up" 价格卖出
+                    if T["up"] != open_order.sell_price:
+                        if T["up"] < open_order.sell_price:
+                            if decision:
+                                return 
+
+                        print(f"价格波动，进行已有挂单检测: {open_order.__dict__}, T: {T}")
+                        if binance.cancel_order(exchange, symbol, open_order.order_id):
+                            markets.delete_order(session, open_order.order_id)
+                        else:
+                            return
+                        
+                        sell_order, ret = binance.create_sell_limit_order(exchange, symbol, 6, T["up"], open_order.peer_order_id)
+                        if ret and not T["do_thread"]:
+                            thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 6, True))
 
     except Exception as e :
         traceback.print_exc()
