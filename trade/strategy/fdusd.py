@@ -112,6 +112,10 @@ def decision_make(exchange, c_price, symbol):
                     if open_order.side == "SELL":
                         # 如果有卖单且第一次触发这个条件时候，需要撤销重新用"up" 价格卖出
                         if T["up"] != open_order.sell_price:
+                            if T["up"] < open_order.sell_price:
+                                if book_decision(exchange, symbol):
+                                    return 
+
                             print(f"价格波动，进行已有挂单检测: {open_order.__dict__}, T: {T}")
                             if binance.cancel_order(exchange, symbol, open_order.order_id):
                                 markets.delete_order(session, open_order.order_id)
