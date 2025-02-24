@@ -53,23 +53,26 @@ def decision_make(exchange, c_price, symbol):
         #    T["low_times"] = T["low_times"] + 1
 
         #if T["up_times"] >= 3 and T["low_times"] >= 3:
-        if book_decision(exchange, symbol):
-            # 如果已买入, 则需要用"up" 加个挂单卖出
-            closed_orders = markets.get_all_closed_orders(session)
-            for order in closed_orders:
-                # NOTE(tracy), 当前如果有订单需要卖出就不在进行买入，但这样不利于充分交易；当前保持现状，后续按需优化
-                print(f"当前存在需要交易订单: {order.order_id}, T: {T}")
-                if len(open_orders) == 0 :
-                    if order.side == "BUY":
-                        # 这里认为均值会回归，故低于buy单记录的卖出价也等待均值回归后卖出
-                        if T["low"] >= order.sell_price:
-                            do_sell_price = T["low"]
-                        else:
-                            do_sell_price = order.sell_price
+        
 
-                        sell_order, ret = binance.create_sell_limit_order(exchange, symbol, 6, do_sell_price, order.order_id)
-                        if ret and not T["do_thread"]:
-                            thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 6, True))
+        # 如果已买入, 则需要用"up" 加个挂单卖出
+        closed_orders = markets.get_all_closed_orders(session)
+        for order in closed_orders:
+            # NOTE(tracy), 当前如果有订单需要卖出就不在进行买入，但这样不利于充分交易；当前保持现状，后续按需优化
+            print(f"当前存在需要交易订单: {order.order_id}, T: {T}")
+            if len(open_orders) == 0 :
+                if order.side == "BUY":
+                    # 这里认为均值会回归，故低于buy单记录的卖出价也等待均值回归后卖出
+                    if T["low"] >= order.sell_price:
+                        do_sell_price = T["low"]
+                    else:
+                        do_sell_price = order.sell_price
+
+                    sell_order, ret = binance.create_sell_limit_order(exchange, symbol, 6, do_sell_price, order.order_id)
+                    if ret and not T["do_thread"]:
+                        thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 6, True))
+
+        if book_decision(exchange, symbol):
 
             if len(open_orders) == 0 and len(closed_orders) == 0:
                 buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 6, T["low"], T["up"])
