@@ -128,6 +128,18 @@ def decision_make(exchange, c_price, symbol):
                         sell_order, ret = binance.create_sell_limit_order(exchange, symbol, 6, T["up"], open_order.peer_order_id)
                         if ret and not T["do_thread"]:
                             thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 6, True))
+                    else:
+                        if decision:
+                            print(f"价格波动，进行已有挂单检测: {open_order.__dict__}, T: {T}")
+                            if binance.cancel_order(exchange, symbol, open_order.order_id):
+                                markets.delete_order(session, open_order.order_id)
+                            else:
+                                return
+                           
+                            new_price = float(T["up"]) + 0.0001
+                            sell_order, ret = binance.creLte_sell_limit_order(exchange, symbol, 6, new_price, open_order.peer_order_id)
+                            if ret and not T["do_thread"]:
+                                thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 6, True))
 
     except Exception as e :
         traceback.print_exc()
