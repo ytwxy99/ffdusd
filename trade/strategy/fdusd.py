@@ -99,6 +99,9 @@ def decision_make(exchange, c_price, symbol):
                 if open_order.side == "BUY":
                     # 如果有买单且第一次触发这个条件时候，需要撤销重新用"low" 价格买入
                     if T["low"] != open_order.price:
+                        if not decision:
+                            return
+
                         print(f"价格波动，进行已有挂单检测: {open_order.__dict__}, T: {T}")
                         if binance.cancel_order(exchange, symbol, open_order.order_id):
                             markets.delete_order(session, open_order.order_id)
