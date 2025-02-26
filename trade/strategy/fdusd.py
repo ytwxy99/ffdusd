@@ -137,7 +137,7 @@ def decision_make(exchange, c_price, symbol):
                                 return
                            
                             new_price = float(T["up"]) + 0.0001
-                            sell_order, ret = binance.creLte_sell_limit_order(exchange, symbol, 6, new_price, open_order.peer_order_id)
+                            sell_order, ret = binance.create_sell_limit_order(exchange, symbol, 6, new_price, open_order.peer_order_id)
                             if ret and not T["do_thread"]:
                                 thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 6, True))
 
