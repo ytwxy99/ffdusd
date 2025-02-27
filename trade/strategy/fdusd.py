@@ -195,7 +195,7 @@ def check_order(*order_args):
                 continue
 
             if order["status"]  == "closed" and order["filled"] == amount:
-                markets.update_market_order(session, order_id, order["status"])
+                markets.update_market_order(session, order_id, "closed")
                 # NOTE(tracy), delete peer order record when sell order has been finished.
                 sell_order = markets.fetch_order(session, order_id)
                 if close_peer:
@@ -203,13 +203,13 @@ def check_order(*order_args):
                     markets.delete_order(session, sell_order.peer_order_id)
                 print(f"Order completed successfully: {order}")
                 T["do_thread"] = False
-                break
+                return
 
             elif order["status"] == "canceled" or order["status"] == "expired":
                 print("Order did not complete: {order}")
                 markets.update_market_order(session, order_id, "failed")
                 T["do_thread"] = False
-                break
+                return
 
             print(f"Check order status, symbol: {symbol}, order id: {order_id}, status: {order['status']}, price: {order['price']}")
 
