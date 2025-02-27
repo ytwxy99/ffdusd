@@ -106,6 +106,19 @@ def decision_make(exchange, c_price, symbol):
                         if binance.cancel_order(exchange, symbol, open_order.order_id):
                             markets.delete_order(session, open_order.order_id)
                         else:
+                            retry = 0
+                            while True:
+                                time.sleep(5)
+                                if retry >= 3:
+                                    break
+
+                                if binance.cancel_order(exchange, symbol, open_order.order_id):
+                                    markets.delete_order(session, open_order.order_id)
+                                    break
+
+                                retry = retry + 1
+                                
+                            markets.delete_order(session, open_order.order_id)
                             return
                         
                         buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 6, T["low"], T["up"])
@@ -123,6 +136,19 @@ def decision_make(exchange, c_price, symbol):
                         if binance.cancel_order(exchange, symbol, open_order.order_id):
                             markets.delete_order(session, open_order.order_id)
                         else:
+                            retry = 0
+                            while True:
+                                time.sleep(5)
+                                if retry >= 3:
+                                    break
+
+                                if binance.cancel_order(exchange, symbol, open_order.order_id):
+                                    markets.delete_order(session, open_order.order_id)
+                                    break
+
+                                retry = retry + 1
+                                
+                            markets.delete_order(session, open_order.order_id)
                             return
                         
                         sell_order, ret = binance.create_sell_limit_order(exchange, symbol, 6, T["up"], open_order.peer_order_id)
