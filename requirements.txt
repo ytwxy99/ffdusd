@@ -2,3 +2,5 @@ ccxt
 pyyaml
 colorama
 sqlalchemy
+pandas
+TA-Lib

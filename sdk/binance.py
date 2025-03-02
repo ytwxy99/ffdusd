@@ -132,3 +132,20 @@ def get_first_order_book(exchange, symbol):
         book = None
         return book
 
+
+def fetch_k(exchange, symbol, timeframe, limit):
+    try:
+        ohlcv = exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
+        return ohlcv
+    except Exception as e:
+        print(f"Error fetching ohlcv failed: {e}")
+        return None
+
+
+def get_order_book(exchange, symbol):
+    try:
+        order_book = exchange.fetch_order_book(symbol)
+        return order_book
+    except Exception as e:
+        print(f"Error fetching order book failed: {e}")
+        return None

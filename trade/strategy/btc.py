@@ -1,6 +1,10 @@
 import time
 import traceback
 
+import ccxt
+import pandas as pd
+import talib
+
 from sdk import binance
 from models import markets
 from models.base import session, Market
@@ -19,9 +23,10 @@ def do(exchange, symbol):
     #cancel_all_orders(exchange, symbol)
     while True:
         c_price = binance.fetch_current_price(exchange, symbol)
-        if c_price:
-            decision_make(exchange, float(c_price), symbol)
-            time.sleep(1)
+        print(c_price)
+        #if c_price:
+            #decision_make(exchange, float(c_price), symbol)
+            #time.sleep(1)
 
 def decision_make(exchange, c_price, symbol):
     try:
@@ -45,15 +50,6 @@ def decision_make(exchange, c_price, symbol):
             T["low"] = c_price
             T["up_times"] = 0
             T["low_times"] = 0
-
-        #if c_price == T["up"] and c_price != T["low"]:
-        #    T["up_times"] = T["up_times"] + 1
-
-        #if c_price == T["low"] and c_price != T["up"]:
-        #    T["low_times"] = T["low_times"] + 1
-
-        #if T["up_times"] >= 3 and T["low_times"] >= 3:
-        
 
         # 如果已买入, 则需要用"up" 加个挂单卖出
         closed_orders = markets.get_all_closed_orders(session)
@@ -218,14 +214,53 @@ def check_order(*order_args):
         except Exception as e:
             raise e
 
+
 def book_decision(exchange, symbol):
-    books = binance.get_first_order_book(exchange, symbol)
-    if books["sell_count"] > 5000 and books["buy_count"] > 5000:
-        if books["buy_count"] > books["sell_count"]*1.2:
-            return True
-        else:
-            return False
+    m, m_signal, m_hist = macd(exchange, symbol)
+    if m[99] < m[98] and m_hist[99] < m_hist[98]:
+        return True, "down"
 
-    else:
-        return False
+    if m[99] > m[98] and m_hist[99] > m_hist[98]
+        return True, "up"
 
+    return False, ""
+
+
+
+def macd(exchange, symbol, timefram = "15m", limit = 100):
+
+    ohlcv = binance.fetch_k(exchange, symbol, timeframe, limit)
+    
+    if not ohlcv:
+        # 将 K 线数据转换为 DataFrame
+        df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+        df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')  # 转换时间戳
+        
+        # 计算 MACD 指标
+        df['macd'], df['macd_signal'], df['macd_hist'] = talib.MACD(
+            df['close'], fastperiod=12, slowperiod=26, signalperiod=9
+        )
+
+        macd = df["macd"][-10:].to_dict()
+        macd_signal = df["macd_signal"][-10:].to_dict() # MACD 线的 9 日 EMA，用于生成交易信号。
+        macd_hist = df["macd_hist"][-10:].to_dict() # MACD 线与信号线的差值，用于反映市场动量的变化。
+
+        return macd, macd_signal, macd_hist 
+
+
+def calculate_order_ratio(exchange, symbol, depth=10):
+    order_book = binancek.get_order_book(exchange, symbol)
+
+    if order_book:
+        bids = order_book['bids'][:depth]  # 获取前 depth 个买单
+        asks = order_book['asks'][:depth]  # 获取前 depth 个卖单
+
+        # 计算总委托量
+        total_bid_amount = sum(bid[1] for bid in bids)  # 买单总量
+        total_ask_amount = sum(ask[1] for ask in asks)  # 卖单总量
+
+        # 计算委托订单比例
+        if total_bid_amount + total_ask_amount == 0:
+            return 0
+        ratio = total_bid_amount / (total_bid_amount + total_ask_amount)
+        return ratio
