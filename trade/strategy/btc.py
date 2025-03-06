@@ -15,8 +15,10 @@ book_queues = queue.FixedSizeQueue(10)
 T = {
     "up": 0.0,
     "low": 0.0,
+    "do_trade": False,
     "do_thread": False,
     "queues": book_queues,
+    "side": "",
 }
 
 def do(exchange, symbol):
@@ -38,19 +40,9 @@ def decision_make(exchange, c_price, symbol):
             is_trade, side = book_decision(exchange, symbol, T["queues"].queue)
             if is_trade:
                 print(f"do decision, open_order: {open_orders}, T: {T}, side: {side}")
+                T["do_trade"] = is_trade
+                T["side"] = side
 
-
-        #if T["up"] == 0.0 and T["low"] == 0.0:
-        #    T["up"] = c_price
-        #    T["low"] = c_price
-        #
-        #if c_price > T["up"]:
-        #    T["low"] = T["up"]
-        #    T["up"] = c_price
-
-        #if c_price < T["low"]:
-        #    T["up"] = T["low"]
-        #    T["low"] = c_price
 
         ## 如果已买入, 则需要用"up" 加个挂单卖出
         #closed_orders = markets.get_all_closed_orders(session)
@@ -228,7 +220,8 @@ def book_decision(exchange, symbol, queue):
 
     if m_hist[99] > m_hist[98]:
         for i in range(10):
-            if float(queue.__getitem__(i)) > 60:
+            print(f"m_hist: {m_hist[99]}, m_hist: {m_hist[98]}, queue: {queue.__getitem__(i)}, count: {count}")
+            if float(queue.__getitem__(i)) > 0.6:
                 count = count + 1
         
         if count >= 7:
