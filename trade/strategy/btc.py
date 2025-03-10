@@ -65,16 +65,16 @@ def decision_make(exchange, c_price, symbol):
             if len(open_orders) == 0 :
                 if order.side == "BUY":
                     if c_price <= T["stop_price"] and T["handicap"] <= 0:
-                        sell_order, ret = binance.create_sell_limit_order(exchange, symbol, 0.0001, (c_price - 1), order.order_id)
+                        sell_order, ret = binance.create_sell_limit_order(exchange, symbol, order.sell_amount, (c_price - 1), order.order_id)
                         if ret and not T["do_thread"]:
                             print(f"卖出: {order.order_id}, T: {T}")
-                            thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 0.0001, True))
+                            thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, order.sell_amount, True))
 
                     if T["handicap"] < 0:
-                        sell_order, ret = binance.create_sell_limit_order(exchange, symbol, 0.0001, (c_price - 1), order.order_id)
+                        sell_order, ret = binance.create_sell_limit_order(exchange, symbol, order.sell_amount, (c_price - 1), order.order_id)
                         if ret and not T["do_thread"]:
                             print(f"卖出: {order.order_id}, T: {T}")
-                            thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 0.0001, True))
+                            thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, order.sell_amount, True))
 
                     if c_price >= T["sell_price"] and T["handicap"] > 0:
                         T["stop_price"] = c_price
@@ -180,9 +180,9 @@ def decision_make(exchange, c_price, symbol):
                         if T["handicap"] > 0:
                             return 
 
-                        sell_order, ret = binance.create_sell_limit_order(exchange, symbol, 0.0001, (c_price - 1), open_order.peer_order_id)
+                        sell_order, ret = binance.create_sell_limit_order(exchange, symbol, open_order.sell_amount, (c_price - 1), open_order.peer_order_id)
                         if ret and not T["do_thread"]:
-                            thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, 0.0001, True))
+                            thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, open_order.sell_amount, True))
                     else:
                            
                         if T["handicap"] > 0:
@@ -226,6 +226,10 @@ def check_order(*order_args):
                 if close_peer:
                     markets.delete_order(session, order_id)
                     markets.delete_order(session, sell_order.peer_order_id)
+                else:
+                    sell_account = binance.fetch_sell_account(exchange)
+                    markets.update_market_order(session, order_id, "closed", sell_account.real)
+
                 print(f"Order completed successfully: {order}")
                 T["do_thread"] = False
                 return

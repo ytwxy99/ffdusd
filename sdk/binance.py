@@ -76,7 +76,7 @@ def create_sell_limit_order(exchange, symbol, amount, price, peer_order_id):
             side = order["info"]["side"]
             status = order["info"]["status"]
 
-            new_order = Market(order_id=order_id, side=side, status=status, sell_price=price, price=price, peer_order_id=peer_order_id)
+            new_order = Market(order_id=order_id, side=side, status=status, sell_price=price, price=price, peer_order_id=peer_order_id, sell_amount=amount)
             markets.create_order(session, new_order)
             print(f"Sell order created, order_id: {order_id}, price: {price}")
             return order["info"], True
@@ -149,3 +149,13 @@ def get_order_book(exchange, symbol):
     except Exception as e:
         print(f"Error fetching order book failed: {e}")
         return None
+
+
+def fetch_sell_account(exchange, symbol="BTC"):
+    try:
+        balance = exchange.fetch_balance()
+        return float(balance[symbol]['free'])
+
+    except Exception as e:
+        print(f"Error fetching sell account: {e}")
+        raise 

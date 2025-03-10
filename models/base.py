@@ -22,6 +22,7 @@ class Market(Base):
     price = Column(Float, nullable=False) # 交易价格
     sell_price = Column(Float, nullable=False) # 卖出交易价格
     deleted_at = Column(DateTime, nullable=True)
+    sell_amount = Column(Float, nullable=True)
 
 def migrate():
     Base.metadata.create_all(engine)
