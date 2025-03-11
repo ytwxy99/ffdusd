@@ -113,7 +113,8 @@ def decision_make(exchange, c_price, symbol):
                     if T["up"] != open_order.price and T["handicap"] > 0:
 
                         print(f"价格波动，进行已有挂单检测: {open_order.__dict__}, T: {T}")
-                        if binance.cancel_order(exchange, symbol, open_order.order_id): markets.delete_order(session, open_order.order_id)
+                        if binance.cancel_order(exchange, symbol, open_order.order_id): 
+                            markets.delete_order(session, open_order.order_id)
                         else:
                             retry = 0
                             while True:
@@ -136,7 +137,8 @@ def decision_make(exchange, c_price, symbol):
 
                     if T["handicap"] < 0:
                         print(f"买点消失，取消交易:{open_order.__dict__}, T: {T}")
-                        if binance.cancel_order(exchange, symbol, open_order.order_id): markets.delete_order(session, open_order.order_id)
+                        if binance.cancel_order(exchange, symbol, open_order.order_id):
+                            markets.delete_order(session, open_order.order_id)
                         else:
                             retry = 0
                             while True:
@@ -219,7 +221,7 @@ def check_order(*order_args):
                 print(f"fetch_order failed: {order_id}")
                 continue
 
-            if order["status"]  == "closed" and order["filled"] == amount:
+            if order["status"]  == "closed" and order["status"] == "FILLED":
                 markets.update_market_order(session, order_id, "closed")
                 # NOTE(tracy), delete peer order record when sell order has been finished.
                 sell_order = markets.fetch_order(session, order_id)
@@ -240,7 +242,7 @@ def check_order(*order_args):
                 T["do_thread"] = False
                 return
 
-            print(f"Check order status, symbol: {symbol}, order id: {order_id}, status: {order['status']}, price: {order['price']}")
+            print(f"Check order status, symbol: {symbol}, order id: {order_id}, order: {order}, amount: {amount}")
 
             time.sleep(2) # 存在限速问题，我们先将间隔定位2s
 
