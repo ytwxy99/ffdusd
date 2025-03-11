@@ -221,7 +221,7 @@ def check_order(*order_args):
                 print(f"fetch_order failed: {order_id}")
                 continue
 
-            if order["status"]  == "closed" and order["status"] == "FILLED":
+            if order["status"]  == "closed" or order["status"] == "FILLED":
                 markets.update_market_order(session, order_id, "closed")
                 # NOTE(tracy), delete peer order record when sell order has been finished.
                 sell_order = markets.fetch_order(session, order_id)
