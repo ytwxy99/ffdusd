@@ -40,7 +40,8 @@ def decision_make(exchange, c_price, symbol):
         T["queues"].enqueue(calculate_order_ratio(exchange, symbol, depth=10))
 
         if T["queues"].queue.__len__() >= 10:
-            do_trade, side = book_decision(exchange, symbol, T["queues"].queue)
+            do_trade, side, macd = book_decision(exchange, symbol, T["queues"].queue)
+            print(f"交易决策: {do_trade}, side: {side}, macd: {macd}")
             if do_trade:
                 T["do_trade"] = do_trade
                 T["side"] = side
@@ -64,19 +65,13 @@ def decision_make(exchange, c_price, symbol):
             print(f"当前存在需要交易订单: {order.order_id}, T: {T}")
             if len(open_orders) == 0 :
                 if order.side == "BUY":
-                    if c_price <= T["stop_price"] and T["handicap"] <= 0:
+                    if c_price <= T["stop_price"] or macd <= 0:
                         sell_order, ret = binance.create_sell_limit_order(exchange, symbol, order.sell_amount, (c_price - 1), order.order_id)
                         if ret and not T["do_thread"]:
                             print(f"卖出: {order.order_id}, T: {T}")
                             thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, order.sell_amount, True))
 
-                    if T["handicap"] < 0:
-                        sell_order, ret = binance.create_sell_limit_order(exchange, symbol, order.sell_amount, (c_price - 1), order.order_id)
-                        if ret and not T["do_thread"]:
-                            print(f"卖出: {order.order_id}, T: {T}")
-                            thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, order.sell_amount, True))
-
-                    if c_price >= T["sell_price"] and T["handicap"] > 0:
+                    if c_price >= T["sell_price"]:
                         T["stop_price"] = c_price
                         T["sell_price"] = c_price * 1.005
                         print(f"继续持有: {order.order_id}, T: {T}")
@@ -255,12 +250,12 @@ def book_decision(exchange, symbol, queue):
 
     m, m_signal, m_hist = macd(exchange, symbol)
     if not m or not m_hist or not m_hist:
-        return False, ""
+        return False, "", m[99]
 
-    #if m[99] < m[98] and m_hist[99] < m_hist[98]:
-    #    return True, "down"
+    if m[99] <= 0 and m_hist[99] < m_hist[98]:
+        return False, "down", m[99]
 
-    if m_hist[99] > m_hist[98]:
+    if m_hist[99] > m_hist[98] and m[99] > 0:
         for i in range(10):
             print(f"m_hist: {m_hist[99]}, m_hist: {m_hist[98]}, queue: {queue.__getitem__(i)}, count: {count}")
             if float(queue.__getitem__(i)) > 0.6:
@@ -269,12 +264,12 @@ def book_decision(exchange, symbol, queue):
         if count >= 7:
             if T["handicap"] <= 5:
                 T["handicap"] = T["handicap"] + 1
-                return True, "up"
+                return True, "up", m[99]
         else:
             if T["handicap"] >= -5:
                 T["handicap"] = T["handicap"] - 1
 
-    return False, ""
+    return False, "", m[99]
 
 
 
