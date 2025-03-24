@@ -21,6 +21,7 @@ T = {
     "sell_price": 0.0,
     "stop_price": 0.0,
     "handicap": 0,
+    "amount": 0.0,
 }
 
 def do(exchange, symbol):
@@ -42,7 +43,6 @@ def decision_make(exchange, c_price, symbol):
             do_trade, side, macd = book_decision(exchange, symbol, T["queues"].queue)
             print(f"交易决策: {do_trade}, side: {side}, macd: {macd}")
             if do_trade:
-
                 T["do_trade"] = do_trade
                 T["side"] = side
         
@@ -81,18 +81,23 @@ def decision_make(exchange, c_price, symbol):
             T["stop_price"] = buy_price * 0.997
             T["sell_price"] = buy_price * 1.003
 
-            buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 0.0001, buy_price, T["sell_price"])
+            amount = binance.fetch_buy_btc_amount(exchange)
+            if amount == 0:
+                return
+
+            T["amount"] = amount
+            buy_order, ret = binance.create_buy_limit_order(exchange, symbol, T["amount"], buy_price, T["sell_price"])
             if ret and not T["do_thread"]:
-                thread.do_thread(check_order, (exchange, buy_order["orderId"], symbol, 0.0001, False))
+                thread.do_thread(check_order, (exchange, buy_order["orderId"], symbol, T["amount"], False))
 
         elif len(open_orders) != 0:
 
             for open_order in open_orders:
                 if not T["do_thread"]:
                     if open_order.side == "BUY":
-                        thread.do_thread(check_order, (exchange, open_order.order_id, symbol, 0.0001, False))
+                        thread.do_thread(check_order, (exchange, open_order.order_id, symbol, T["amount"], False))
                     else:
-                        thread.do_thread(check_order, (exchange, open_order.order_id, symbol, 0.0001, True))
+                        thread.do_thread(check_order, (exchange, open_order.order_id, symbol, T["amount"], True))
 
                 print(f"挂单检测，T：{T}, 预期成交价格: {open_order.price}")
                 if open_order.side == "BUY":
@@ -114,12 +119,11 @@ def decision_make(exchange, c_price, symbol):
 
                                 retry = retry + 1
                                 
-                            markets.delete_order(session, open_order.order_id)
                             return
                         
-                        buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 0.0001, (c_price + 1), T["sell_price"])
+                        buy_order, ret = binance.create_buy_limit_order(exchange, symbol, T["amount"], (c_price + 1), T["sell_price"])
                         if ret and not T["do_thread"]:
-                            thread.do_thread(check_order, (exchange, buy_order["orderId"], symbol, 0.0001, False))
+                            thread.do_thread(check_order, (exchange, buy_order["orderId"], symbol, T["amount"], False))
 
                     if T["handicap"] < 0:
                         print(f"买点消失，取消交易:{open_order.__dict__}, T: {T}")
@@ -223,7 +227,7 @@ def check_order(*order_args):
                 return
 
             elif order["status"] == "canceled" or order["status"] == "expired":
-                print("Order did not complete: {order}")
+                print(f"Order did not complete: {order}")
                 markets.update_market_order(session, order_id, "failed")
                 T["do_thread"] = False
                 return

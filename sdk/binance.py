@@ -152,6 +152,7 @@ def get_order_book(exchange, symbol):
 
 
 def fetch_sell_account(exchange, symbol="BTC"):
+    """获取BTC可以使用的所有数量"""
     try:
         balance = exchange.fetch_balance()
         return float(balance[symbol]['free'])
@@ -159,3 +160,24 @@ def fetch_sell_account(exchange, symbol="BTC"):
     except Exception as e:
         print(f"Error fetching sell account: {e}")
         raise 
+
+
+def fetch_buy_btc_amount(exchange):
+    try:
+        # 获取账户余额
+        balance = exchange.fetch_balance()
+        usdt_balance = balance['free']['USDT']  # 假设USDT在你的账户中是可用的
+
+        # 获取USDT/BTC交易对的价格
+        ticker = exchange.fetch_ticker('BTC/USDT')
+        btc_price = ticker['last']  # 使用最新交易价格
+
+        # 计算USDT能够购买的BTC数量
+        btc_amount = usdt_balance / btc_price
+        print(f"你当前有 {usdt_balance} USDT，可以购买 {btc_amount:.8f} BTC。")
+
+        return btc_amount
+
+    except Exception as e:
+        print(f"fetch_buy_btc_amount failed: {e}")
+        return 0
