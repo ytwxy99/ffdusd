@@ -2,3 +2,4 @@
 __pycache__/
 fdusd.db
 nohup.out
+.idea/
