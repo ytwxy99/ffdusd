@@ -250,7 +250,7 @@ def book_decision(exchange, symbol, queue):
 
     m, m_signal, m_hist = macd(exchange, symbol)
     if not m or not m_hist or not m_hist:
-        return False, "", m[99]
+        return False, "", 0
 
     if m[99] <= 0 and m_hist[99] < m_hist[98]:
         return False, "down", m[99]
