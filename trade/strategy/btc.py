@@ -43,6 +43,7 @@ def decision_make(exchange, c_price, symbol):
             do_trade, side, macd = book_decision(exchange, symbol, T["queues"].queue)
             print(f"交易决策: {do_trade}, side: {side}, macd: {macd}")
             if do_trade:
+
                 T["do_trade"] = do_trade
                 T["side"] = side
         
@@ -61,41 +62,33 @@ def decision_make(exchange, c_price, symbol):
         # 卖出
         closed_orders = markets.get_all_closed_orders(session)
         for order in closed_orders:
-            # NOTE(tracy), 当前如果有订单需要卖出就不在进行买入，但这样不利于充分交易；当前保持现状，后续按需优化
-            print(f"当前存在需要交易订单: {order.order_id}, T: {T}")
+            print(f"当前存在需要交易订单: {order.order_id}, T: {T}, buy_price: {order.price}, increase: {(c_price-order.price)/order.price*100}")
             if len(open_orders) == 0 :
                 if order.side == "BUY":
-                    if c_price <= T["stop_price"] or macd <= 0:
+                    if c_price <= T["stop_price"] or (macd <= 0):
                         sell_order, ret = binance.create_sell_limit_order(exchange, symbol, order.sell_amount, (c_price - 1), order.order_id)
                         if ret and not T["do_thread"]:
                             print(f"卖出: {order.order_id}, T: {T}")
                             thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, order.sell_amount, True))
 
                     if c_price >= T["sell_price"]:
-                        T["stop_price"] = c_price
-                        T["sell_price"] = c_price * 1.005
-                        print(f"继续持有: {order.order_id}, T: {T}")
+                        T["stop_price"] = c_price * 0.998
+                        T["sell_price"] = c_price * 1.003
+                        print(f"更新目标, 继续持有: {order.order_id}, T: {T}")
 
 
         if len(open_orders) == 0 and len(closed_orders) == 0 and T["do_trade"] and T["handicap"] > 0:
             buy_price = c_price + 1.0
-            T["stop_price"] = buy_price * 0.99
-            T["sell_price"] = buy_price * 1.005
+            T["stop_price"] = buy_price * 0.997
+            T["sell_price"] = buy_price * 1.003
 
             buy_order, ret = binance.create_buy_limit_order(exchange, symbol, 0.0001, buy_price, T["sell_price"])
             if ret and not T["do_thread"]:
                 thread.do_thread(check_order, (exchange, buy_order["orderId"], symbol, 0.0001, False))
 
         elif len(open_orders) != 0:
-            # 此逻辑处理已有挂单情况下，具体处理情况如下：
-            # 1. 当买入价格比最新low价格高时，则撤单用最新低价挂单买入。
-            # 2. 当order订单记录卖出价格比最新low低时候，是否需要撤单重新高价挂单卖出这里需要考虑排队问题，当前
-            #    就按照撤单，用最新高价来卖出；
-            # 3. 当买入价格比最新low价格低时，是否需要撤单重新用最新价格买入这里需要靠谱排队问题，当前就按照撤单
-            #    用最新高价来买入;
-            
-            for open_order in open_orders:
 
+            for open_order in open_orders:
                 if not T["do_thread"]:
                     if open_order.side == "BUY":
                         thread.do_thread(check_order, (exchange, open_order.order_id, symbol, 0.0001, False))
@@ -106,7 +99,6 @@ def decision_make(exchange, c_price, symbol):
                 if open_order.side == "BUY":
                     # 如果有买单且第一次触发这个条件时候，需要撤销重新用"low" 价格买入
                     if T["up"] != open_order.price and T["handicap"] > 0:
-
                         print(f"价格波动，进行已有挂单检测: {open_order.__dict__}, T: {T}")
                         if binance.cancel_order(exchange, symbol, open_order.order_id): 
                             markets.delete_order(session, open_order.order_id)
@@ -257,8 +249,8 @@ def book_decision(exchange, symbol, queue):
 
     if m_hist[99] > m_hist[98] and m[99] > 0:
         for i in range(10):
-            print(f"m_hist: {m_hist[99]}, m_hist: {m_hist[98]}, queue: {queue.__getitem__(i)}, count: {count}")
             if float(queue.__getitem__(i)) > 0.6:
+            #print(f"m_hist: {m_hist[99]}, m_hist: {m_hist[98]}, queue: {queue.__getitem__(i)}, count: {count}")
                 count = count + 1
         
         if count >= 7:
