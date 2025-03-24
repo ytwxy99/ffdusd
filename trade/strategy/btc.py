@@ -62,7 +62,7 @@ def decision_make(exchange, c_price, symbol):
         # 卖出
         closed_orders = markets.get_all_closed_orders(session)
         for order in closed_orders:
-            print(f"当前存在需要交易订单: {order.order_id}, T: {T}, buy_price: {order.price}, increase: {(c_price-order.price)/order.price*100}")
+            print(f"当前存在需要交易订单: {order.order_id}, T: {T}, buy_price: {order.price}, c_price: {c_price}, increase: {(c_price-order.price)/order.price*100}")
             if len(open_orders) == 0 :
                 if order.side == "BUY":
                     if c_price <= T["stop_price"] or (macd <= 0):
