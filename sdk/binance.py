@@ -205,3 +205,61 @@ def get_max_amount(exchange, symbol, leverage, c_price):
     except Exception as e:
         print(f"获取杠杆交易做大下单数量错误: {e}")
         return 0
+
+
+# 杠杆开仓
+def open_position(exchange, symbol, side, amount, price, close_price, leverage=3):
+    """
+        开仓（做多/做空）
+        :param side: 'buy'（做多） 或 'sell'（做空）
+        :param amount: 买入/卖出数量
+        :param leverage: 杠杆倍数
+    """
+    try:
+        order = exchange.create_order(
+                symbol=symbol,
+                type='market',
+                side=side,
+                amount=amount,
+                price=price,
+                params={
+                    'marginMode': 'isolated',  # 隔离保证金模式
+                    'autoBorrow': True,        # 自动借币
+                    'timeInForce': 'GTC',      # 订单有效期（Good Till Cancel）
+                }
+            )
+
+        print(f"Open position created, order: {order}")
+
+        if order:
+            order_id = order["info"]["orderId"]
+            side = order["info"]["side"]
+            status = order["info"]["status"]
+
+            new_order = Market(order_id=order_id, side=side, status=status, sell_price=close_price, price=price)
+            markets.create_order(session, new_order)
+            print(f"Buy order created, order_id: {order_id}, price: {price}")
+            return order["info"], True
+
+    except ccxt.BaseError as e:
+        print(f"Error creating buy order: {e}")
+        return None, False
+
+
+# 杠杆平仓
+def create_sell_limit_order(exchange, symbol, amount, price, peer_order_id):
+    try:
+        order = exchange.create_limit_sell_order(symbol, amount, price)
+        if order:
+            order_id = order["info"]["orderId"]
+            side = order["info"]["side"]
+            status = order["info"]["status"]
+
+            new_order = Market(order_id=order_id, side=side, status=status, sell_price=price, price=price, peer_order_id=peer_order_id, sell_amount=amount)
+            markets.create_order(session, new_order)
+            print(f"Sell order created, order_id: {order_id}, price: {price}")
+            return order["info"], True
+
+    except ccxt.BaseError as e:
+        print(f"Error creating sell order: {e}")
+        return None, False
