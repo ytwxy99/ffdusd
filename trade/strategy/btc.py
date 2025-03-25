@@ -27,11 +27,16 @@ T = {
 def do(exchange, symbol):
     # 所有开始前都需要把挂单都撤销
     #cancel_all_orders(exchange, symbol)
-    while True:
-        c_price = binance.fetch_current_price(exchange, symbol)
-        if c_price:
-            decision_make(exchange, float(c_price), symbol)
-            time.sleep(1)
+
+    c_price = binance.fetch_current_price(exchange, symbol)
+    buy_btcs = binance.get_max_amount(exchange, symbol, 3, c_price)
+    print(f"最多可买（USDT）: {buy_btcs}")
+
+    #while True:
+    #    c_price = binance.fetch_current_price(exchange, symbol)
+    #    if c_price:
+    #        decision_make(exchange, float(c_price), symbol)
+    #        time.sleep(1)
 
 def decision_make(exchange, c_price, symbol):
     try:
@@ -71,7 +76,7 @@ def decision_make(exchange, c_price, symbol):
                             thread.do_thread(check_order, (exchange, sell_order["orderId"], symbol, order.sell_amount, True))
 
                     if c_price >= T["sell_price"]:
-                        T["stop_price"] = c_price * 0.998
+                        T["stop_price"] = c_price * 0.999
                         T["sell_price"] = c_price * 1.003
                         print(f"更新目标, 继续持有: {order.order_id}, T: {T}")
 
@@ -250,7 +255,7 @@ def book_decision(exchange, symbol, queue):
     if m[99] <= 0 and m_hist[99] < m_hist[98]:
         return False, "down", m[99]
 
-    if m_hist[99] > m_hist[98] and m[99] > 0:
+    if m_hist[99] > m_hist[98] and m[99] > m[98]:
         for i in range(10):
             if float(queue.__getitem__(i)) > 0.6:
             #print(f"m_hist: {m_hist[99]}, m_hist: {m_hist[98]}, queue: {queue.__getitem__(i)}, count: {count}")

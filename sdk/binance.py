@@ -9,6 +9,9 @@ def auth_exchagne_binance(ak, sk, is_enable_rate_limit):
         'apiKey': ak,
         'secret': sk, 
         'enableRateLimit': is_enable_rate_limit,  # 启用速率限制
+        'options': {
+            'defaultType': 'margin',  # 设置为保证金交易模式
+        }
     })
 
 
@@ -180,4 +183,25 @@ def fetch_buy_btc_amount(exchange):
 
     except Exception as e:
         print(f"fetch_buy_btc_amount failed: {e}")
+        return 0
+
+
+def get_max_amount(exchange, symbol, leverage, c_price):
+
+    try:
+        balance = exchange.fetch_balance(params={'type': 'margin'})
+        free_usdt = balance['USDT']['free']
+
+        max_btc_theoretical = (free_usdt * leverage) / c_price
+
+        # 6. 检查币安的最大名义金额限制（maxNotional）
+        market_info = exchange.market(symbol)
+        max_notional = market_info['limits']['cost']['max']  # 例如 100万USDT
+        max_btc_actual = min(max_btc_theoretical, max_notional / c_price)
+
+
+        return max_btc_actual
+
+    except Exception as e:
+        print(f"获取杠杆交易做大下单数量错误: {e}")
         return 0
