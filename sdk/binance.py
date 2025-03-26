@@ -297,6 +297,7 @@ def close_position(exchange, symbol, amount, price, peer_order_id, side):
 
         # 调整数量精度
         adjusted_qty = exchange.amount_to_precision(symbol, qty_to_sell if side == 'buy' else qty_to_buy)
+        amount = qty_to_sell if side == 'buy' else qty_to_buy
         import pdb;pdb.set_trace()
 
         # 创建平仓订单（带自动还款）
@@ -310,7 +311,7 @@ def close_position(exchange, symbol, amount, price, peer_order_id, side):
             type='limit',
             price=price,
             side=side_type,
-            amount=adjusted_qty,
+            amount=amount,
             params=params
         )
 
