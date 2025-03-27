@@ -41,7 +41,7 @@ def decision_make(exchange, c_price, symbol):
         T["queues"].enqueue(calculate_order_ratio(exchange, symbol, binance))
 
         if T["queues"].queue.__len__() >= 10:
-            do_trade, side, macd = book_decision(exchange, symbol, T["queues"].queue)
+            do_trade, side, macd, is_macd_up = book_decision(exchange, symbol, T["queues"].queue)
             print(f"交易决策: {do_trade}, side: {side}, macd: {macd}, c_price: {c_price}")
             if do_trade:
                 T["do_trade"] = do_trade
@@ -65,7 +65,7 @@ def decision_make(exchange, c_price, symbol):
             print(f"当前存在需要交易订单: {order.order_id}, T: {T}, buy_price: {order.price}, c_price: {c_price}, increase: {(c_price-order.price)/order.price*100}")
             if len(open_orders) == 0 :
                 if order.side == "BUY":
-                    if c_price <= T["stop_price"] or (macd <= 0) or True:
+                    if c_price <= T["stop_price"]:
                         sell_order, ret = binance.close_position(exchange, symbol, order.close_amount, (c_price - 1), order.order_id, "buy")
                         if ret and not T["do_thread"]:
                             print(f"卖出: {order.order_id}, T: {T}")
@@ -79,7 +79,7 @@ def decision_make(exchange, c_price, symbol):
 
         if len(open_orders) == 0 and len(closed_orders) == 0 and T["do_trade"] and T["handicap"] > 0:
             open_price = c_price + 1.0
-            T["stop_price"] = open_price * 0.997
+            T["stop_price"] = open_price * 0.999
             T["close_price"] = open_price * 1.003
 
             amount = binance.get_max_amount(exchange, symbol, 3, c_price, T["side"])
@@ -151,7 +151,7 @@ def decision_make(exchange, c_price, symbol):
 
                 if open_order.side == "SELL":
                     # 如果有卖单且第一次触发这个条件时候，需要撤销重新用"up" 价格卖出
-                    if T["up"] != open_order.sell_price:
+                    if T["up"] != open_order.close_price:
 
                         print(f"价格波动，进行已有挂单检测: {open_order.__dict__}, T: {T}")
                         if binance.cancel_order(exchange, symbol, open_order.order_id):
@@ -248,7 +248,7 @@ def book_decision(exchange, symbol, queue):
 
     m, m_signal, m_hist = do_macd(exchange, symbol, binance)
     if not m or not m_hist or not m_hist:
-        return False, "", 0
+        return False, "", 0, False
 
     # if m[99] <= 0 and m_hist[99] < m_hist[98]:
     #     for i in range(10):
@@ -273,9 +273,9 @@ def book_decision(exchange, symbol, queue):
         if count >= 7:
             if T["handicap"] <= 5:
                 T["handicap"] = T["handicap"] + 1
-                return True, "buy", m[99]
+                return True, "buy", m[99], m[99] > m[98]
         else:
             if T["handicap"] >= -5:
                 T["handicap"] = T["handicap"] - 1
 
-    return False, "buy", m[99]
+    return False, "buy", m[99], m[99] > m[98]

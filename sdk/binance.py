@@ -296,9 +296,8 @@ def close_position(exchange, symbol, amount, price, peer_order_id, side):
             return
 
         # 调整数量精度
-        adjusted_qty = exchange.amount_to_precision(symbol, qty_to_sell if side == 'buy' else qty_to_buy)
+        #adjusted_qty = exchange.amount_to_precision(symbol, qty_to_sell if side == 'buy' else qty_to_buy)
         amount = qty_to_sell if side == 'buy' else qty_to_buy
-        import pdb;pdb.set_trace()
 
         # 创建平仓订单（带自动还款）
         params = {
@@ -319,7 +318,7 @@ def close_position(exchange, symbol, amount, price, peer_order_id, side):
             order_id = close_order["info"]["orderId"]
             side = close_order["info"]["side"]
             status = close_order["info"]["status"]
-            new_order = Market(order_id=order_id, side=side, status=status, close_price=price, price=price, peer_order_id=peer_order_id, close_amount=adjusted_qty)
+            new_order = Market(order_id=order_id, side=side, status=status, close_price=price, price=price, peer_order_id=peer_order_id, close_amount=amount)
             markets.create_order(session, new_order)
             print(f"Close position created, order_id: {order_id}, price: {price}")
             return close_order["info"], True
