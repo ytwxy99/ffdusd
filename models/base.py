@@ -20,9 +20,9 @@ class Market(Base):
     order_id = Column(String, nullable=False) # 订单id
     peer_order_id = Column(String, nullable=True) # 订单id
     price = Column(Float, nullable=False) # 交易价格
-    sell_price = Column(Float, nullable=False) # 卖出交易价格
+    close_price = Column(Float, nullable=False) # 卖出交易价格
+    close_amount = Column(Float, nullable=True)
     deleted_at = Column(DateTime, nullable=True)
-    sell_amount = Column(Float, nullable=True)
 
 def migrate():
     Base.metadata.create_all(engine)

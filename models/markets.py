@@ -14,10 +14,10 @@ def fetch_order(session, order_id):
     return session.query(Market).filter_by(order_id=order_id).filter(Market.deleted_at.is_(None)).first()
 
 
-def update_market_order(session, order_id, status, sell_amount = 0):
+def update_market_order(session, order_id, status, close_amount = 0):
     market = session.query(Market).filter_by(order_id=order_id).first()
     market.status = status
-    market.sell_amount = sell_amount
+    market.close_amount = close_amount
     session.commit()
     
 
